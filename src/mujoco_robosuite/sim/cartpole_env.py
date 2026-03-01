@@ -157,8 +157,13 @@ class CartPoleBalanceEnv(gym.Env[np.ndarray, np.ndarray]):
             )
 
         if self._viewer.is_running():
+            start_time = time.perf_counter()
             self._viewer.sync()
-            time.sleep(self.model.opt.timestep)
+            effective_dt = self.frame_skip * self.model.opt.timestep
+            elapsed = time.perf_counter() - start_time
+            remaining = effective_dt - elapsed
+            if remaining > 0.0:
+                time.sleep(remaining)
 
     def close(self) -> None:
         if self._viewer is not None:
