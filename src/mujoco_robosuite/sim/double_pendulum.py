@@ -7,7 +7,6 @@ import mujoco
 import mujoco.viewer
 import robosuite
 
-
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[3]
 MODEL_PATH = PROJECT_ROOT / "models" / "double_pendulum.xml"
 
@@ -26,7 +25,9 @@ def main() -> None:
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
         viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
-        viewer.cam.fixedcamid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, "main_cam")
+        viewer.cam.fixedcamid = mujoco.mj_name2id(
+            model, mujoco.mjtObj.mjOBJ_CAMERA, "main_cam"
+        )
 
         while viewer.is_running():
             step_start = time.time()
