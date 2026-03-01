@@ -1,33 +1,33 @@
-# Repository Guidelines
+# AGENTS
 
-## Project Structure & Module Organization
-- Core Python package code lives in `src/mujoco_robosuite/`.
-- Simulation logic is under `src/mujoco_robosuite/sim/` (for example, `double_pendulum.py`).
-- Runnable entry scripts live in `scripts/` (for example, `scripts/run_double_pendulum.py`).
-- MuJoCo XML assets live in `models/`.
-- Tooling and metadata are in `.pre-commit-config.yaml`, `requirements.txt`, and `.github/workflows/ci.yml`.
+## Purpose
+Contributor and coding-agent guide for this repository.
+This file applies to the entire repository tree unless a deeper directory provides a more specific `AGENTS.md`.
 
-## Build, Test, and Development Commands
-- `python3.10 -m venv .venv && source .venv/bin/activate`: create and activate the local environment.
-- `pip install -r requirements.txt`: install runtime dependencies.
-- `python scripts/run_double_pendulum.py`: run the double pendulum demo viewer.
-- `pre-commit run --all-files --show-diff-on-failure`: run all linting/format checks used in CI.
-- `python -c "import mujoco, robosuite; print(mujoco.__version__, robosuite.__version__)"`: verify imports and versions.
+## Scope
+- Applies to all files and directories in this repo (`.github/`, `models/`, `scripts/`, `src/`, `tests/`, and root config/docs).
+- Build and maintain MuJoCo / robosuite examples under `src/` and `scripts/`
+- Keep environment behavior reproducible and testable
+- Prefer small, reviewable changes
 
-## Coding Style & Naming Conventions
-- Target Python 3.10 with 4-space indentation and type hints where practical.
-- Use `snake_case` for modules/functions/variables and `UPPER_SNAKE_CASE` for constants.
-- Keep imports sorted with `isort` and code formatted with `black`/`ruff-format`.
-- Resolve lint issues with `ruff` before opening a PR.
-- Install hooks once per clone: `pre-commit install`.
+## Development workflow
+1. Create/activate virtualenv:
+   - `python3.10 -m venv .venv`
+   - `source .venv/bin/activate`
+2. Install deps:
+   - `pip install -r requirements.txt`
+3. Run checks before commit:
+   - `pre-commit run --all-files`
+   - `pytest -q tests/test_cartpole_env.py`
 
-## Testing Guidelines
-- There is no dedicated `tests/` suite yet; current quality gate is pre-commit plus a runtime smoke test.
-- For simulation changes, run `pre-commit run --all-files` and `python scripts/run_double_pendulum.py`.
-- If you add automated tests, place them in `tests/` and name files `test_<module>.py`.
+## Project conventions
+- Keep simulation code in `src/mujoco_robosuite/sim/`
+- Keep runnable entrypoints in `scripts/`
+- Keep MuJoCo XML models in `models/`
+- Add tests for environment dynamics and API behavior in `tests/`
+- Avoid GUI requirements in tests (`render_mode=None` for CI)
 
-## Commit & Pull Request Guidelines
-- Follow Conventional Commit style used in history: `feat: ...`, `fix: ...`, `ci: ...`.
-- Keep commits focused to one logical change when possible.
-- PRs should include a concise summary, linked issue (if applicable), and exact validation commands run.
-- Include screenshots or short recordings for viewer/rendering changes.
+## CartPole notes
+- `models/cartpole.xml` uses non-colliding decorative geoms (`contype=0`, `conaffinity=0`) to avoid contact constraints blocking cart motion
+- Observation order in `CartPoleBalanceEnv`: `[cart_pos, cart_vel, pole_angle, pole_ang_vel]`
+- Joint indexing must use MuJoCo address arrays (`jnt_qposadr`, `jnt_dofadr`), not raw joint IDs

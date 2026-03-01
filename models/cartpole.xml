@@ -1,0 +1,44 @@
+<mujoco model="cartpole_2d">
+  <compiler angle="radian" autolimits="true"/>
+  <option gravity="0 0 -9.81" integrator="RK4" timestep="0.01"/>
+
+  <visual>
+    <headlight ambient="0.45 0.45 0.45" diffuse="0.7 0.7 0.7"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+  </visual>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.20 0.30 0.40" rgb2="0.10 0.15 0.20"/>
+    <material name="grid" texture="grid" texrepeat="8 8" reflectance="0.1"/>
+    <material name="cart" rgba="0.90 0.55 0.20 1"/>
+    <material name="pole" rgba="0.20 0.65 0.95 1"/>
+    <material name="rail" rgba="0.80 0.80 0.80 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 4" dir="0 0 -1" diffuse="1 1 1"/>
+    <geom name="floor" type="plane" size="6 3 0.1" material="grid" contype="0" conaffinity="0"/>
+
+    <geom name="rail_top" type="box" pos="0 0 0.20" size="2.6 0.03 0.02" material="rail" contype="0" conaffinity="0"/>
+    <geom name="rail_bottom" type="box" pos="0 0 0.00" size="2.6 0.03 0.02" material="rail" contype="0" conaffinity="0"/>
+
+    <body name="cart" pos="0 0 0.11">
+      <joint name="slider" type="slide" axis="1 0 0" limited="true" range="-2.4 2.4" damping="0.08"/>
+      <geom name="cart_geom" type="box" size="0.14 0.09 0.09" material="cart" contype="0" conaffinity="0"/>
+      <inertial pos="0 0 0" mass="1.0" diaginertia="0.02 0.02 0.02"/>
+
+      <body name="pole" pos="0 0 0.09">
+        <joint name="pole_hinge" type="hinge" axis="0 1 0" limited="true" range="-3.14 3.14" damping="0.01"/>
+        <geom name="pole_geom" type="capsule" fromto="0 0 0 0 0 0.65" size="0.03" material="pole" contype="0" conaffinity="0"/>
+        <inertial pos="0 0 0.325" mass="0.12" diaginertia="0.004 0.004 0.0002"/>
+      </body>
+    </body>
+
+    <camera name="main_cam" pos="0 -4.3 1.8" xyaxes="1 0 0 0 0.55 0.84"/>
+  </worldbody>
+
+  <actuator>
+    <motor name="cart_motor" joint="slider" gear="25" ctrllimited="true" ctrlrange="-1 1"/>
+  </actuator>
+</mujoco>

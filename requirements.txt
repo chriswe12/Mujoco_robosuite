@@ -1,3 +1,5 @@
 mujoco
 robosuite
 numpy
+gymnasium
+stable-baselines3
