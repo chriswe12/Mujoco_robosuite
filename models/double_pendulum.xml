@@ -1,0 +1,45 @@
+<mujoco model="double_pendulum">
+  <compiler angle="radian" autolimits="true"/>
+  <option gravity="0 0 -9.81" integrator="RK4" timestep="0.002"/>
+
+  <visual>
+    <headlight ambient="0.45 0.45 0.45" diffuse="0.7 0.7 0.7"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+  </visual>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.20 0.30 0.40" rgb2="0.10 0.15 0.20"/>
+    <material name="grid" texture="grid" texrepeat="6 6" reflectance="0.1"/>
+    <material name="link1" rgba="0.85 0.35 0.25 1"/>
+    <material name="link2" rgba="0.20 0.60 0.90 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 3" dir="0 0 -1" diffuse="1 1 1"/>
+    <geom name="floor" type="plane" size="3 3 0.1" material="grid"/>
+
+    <body name="base" pos="0 0 1.5">
+      <geom name="base_geom" type="sphere" size="0.05" rgba="0.9 0.9 0.9 1"/>
+
+      <body name="link1" pos="0 0 0">
+        <joint name="hinge1" type="hinge" axis="0 1 0" limited="true" range="-3.14 3.14" damping="0.03"/>
+        <geom name="rod1" type="capsule" fromto="0 0 0 0 0 -0.75" size="0.04" material="link1"/>
+        <inertial pos="0 0 -0.375" mass="1.2" diaginertia="0.06 0.06 0.01"/>
+
+        <body name="link2" pos="0 0 -0.75">
+          <joint name="hinge2" type="hinge" axis="0 1 0" limited="true" range="-3.14 3.14" damping="0.02"/>
+          <geom name="rod2" type="capsule" fromto="0 0 0 0 0 -0.65" size="0.035" material="link2"/>
+          <inertial pos="0 0 -0.325" mass="0.8" diaginertia="0.035 0.035 0.008"/>
+        </body>
+      </body>
+    </body>
+
+    <camera name="main_cam" pos="2.5 -2.2 1.8" xyaxes="0.7 0.7 0 -0.3 0.3 0.9"/>
+  </worldbody>
+
+  <actuator>
+    <motor name="m1" joint="hinge1" gear="1" ctrllimited="true" ctrlrange="-2 2"/>
+    <motor name="m2" joint="hinge2" gear="1" ctrllimited="true" ctrlrange="-2 2"/>
+  </actuator>
+</mujoco>
