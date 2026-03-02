@@ -25,19 +25,43 @@ def _resolve_model_path(path: pathlib.Path) -> pathlib.Path:
     return path.with_suffix(".zip")
 
 
-def make_env(render_mode: str | None = None, max_episode_steps: int = 1000):
+def make_env(
+    render_mode: str | None = None,
+    max_episode_steps: int = 1000,
+    terminate_on_limits: bool = False,
+    x_limit: float = 4.8,
+    reset_mode: str = "bottom_biased",
+    bottom_bias_prob: float = 0.8,
+    bottom_angle_jitter: float = 0.25,
+):
     def _factory() -> CartPoleBalanceEnv:
         return CartPoleBalanceEnv(
-            render_mode=render_mode, max_episode_steps=max_episode_steps
+            render_mode=render_mode,
+            max_episode_steps=max_episode_steps,
+            terminate_on_limits=terminate_on_limits,
+            x_limit=x_limit,
+            reset_mode=reset_mode,
+            bottom_bias_prob=bottom_bias_prob,
+            bottom_angle_jitter=bottom_angle_jitter,
         )
 
     return _factory
 
 
-def train(args: argparse.Namespace) -> None:
-    vec_env = DummyVecEnv(
-        [make_env(render_mode=None, max_episode_steps=args.max_episode_steps)]
+def make_env_from_args(args: argparse.Namespace, render_mode: str | None):
+    return make_env(
+        render_mode=render_mode,
+        max_episode_steps=args.max_episode_steps,
+        terminate_on_limits=args.terminate_on_limits,
+        x_limit=args.x_limit,
+        reset_mode=args.reset_mode,
+        bottom_bias_prob=args.bottom_bias_prob,
+        bottom_angle_jitter=args.bottom_angle_jitter,
     )
+
+
+def train(args: argparse.Namespace) -> None:
+    vec_env = DummyVecEnv([make_env_from_args(args, render_mode=None)])
     vec_env = VecNormalize(vec_env, norm_obs=True, norm_reward=True, clip_obs=10.0)
 
     model = PPO(
@@ -72,9 +96,7 @@ def deploy(args: argparse.Namespace) -> None:
     if not args.stats_out.exists():
         raise FileNotFoundError(f"Missing normalization artifact: {args.stats_out}")
 
-    vec_env = DummyVecEnv(
-        [make_env(render_mode="human", max_episode_steps=args.max_episode_steps)]
-    )
+    vec_env = DummyVecEnv([make_env_from_args(args, render_mode="human")])
     vec_env = VecNormalize.load(str(args.stats_out), vec_env)
     vec_env.training = False
     vec_env.norm_reward = False
@@ -110,13 +132,22 @@ def deploy(args: argparse.Namespace) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Train and deploy a 2D CartPole balancer."
+        description="Train and deploy a 2D CartPole swing-up controller."
     )
     parser.add_argument("--mode", choices=["train", "deploy", "both"], default="both")
     parser.add_argument("--timesteps", type=int, default=100_000)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--max-episode-steps", type=int, default=1000)
     parser.add_argument("--deploy-episodes", type=int, default=3)
+    parser.add_argument("--x-limit", type=float, default=4.8)
+    parser.add_argument("--terminate-on-limits", action="store_true")
+    parser.add_argument(
+        "--reset-mode",
+        choices=["bottom_biased", "bottom", "uniform"],
+        default="bottom_biased",
+    )
+    parser.add_argument("--bottom-bias-prob", type=float, default=0.8)
+    parser.add_argument("--bottom-angle-jitter", type=float, default=0.25)
     parser.add_argument(
         "--model-out",
         type=pathlib.Path,

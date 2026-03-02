@@ -18,9 +18,11 @@ def test_reset_observation_shape_and_finite() -> None:
     env = CartPoleBalanceEnv(render_mode=None)
     obs, info = env.reset(seed=0)
 
-    assert obs.shape == (4,)
+    assert obs.shape == (5,)
     assert obs.dtype == np.float32
     assert np.isfinite(obs).all()
+    assert -1.0 <= float(obs[2]) <= 1.0
+    assert -1.0 <= float(obs[3]) <= 1.0
     assert info == {}
 
     env.close()
@@ -34,7 +36,7 @@ def test_step_outputs_reward_and_observation_valid() -> None:
         np.array([0.0], dtype=np.float32)
     )
 
-    assert obs.shape == (4,)
+    assert obs.shape == (5,)
     assert np.isfinite(obs).all()
     assert np.isfinite(reward)
     assert isinstance(terminated, bool)
@@ -74,21 +76,57 @@ def test_actions_drive_cart_in_opposite_directions() -> None:
     env.close()
 
 
-def test_zero_action_eventually_fails_from_pole_angle() -> None:
-    env = CartPoleBalanceEnv(render_mode=None)
+def test_time_limit_only_termination_by_default() -> None:
+    env = CartPoleBalanceEnv(render_mode=None, max_episode_steps=25)
     env.reset(seed=3)
 
-    done = False
+    terminated_seen = False
+    truncated_seen = False
     steps = 0
-    last_info = {}
-    while not done and steps < 300:
-        _, _, terminated, truncated, info = env.step(np.array([0.0], dtype=np.float32))
-        done = terminated or truncated
+    while not truncated_seen and steps < 50:
+        _, _, terminated, truncated, _ = env.step(np.array([0.0], dtype=np.float32))
+        terminated_seen = terminated_seen or terminated
+        truncated_seen = truncated
         steps += 1
-        last_info = info
 
-    assert done
-    assert steps < 300
-    assert abs(float(last_info["pole_angle"])) > env.theta_limit
+    assert not terminated_seen
+    assert truncated_seen
+    assert steps == 25
+
+    env.close()
+
+
+def test_bottom_reset_mode_starts_near_pi() -> None:
+    env = CartPoleBalanceEnv(
+        render_mode=None,
+        reset_mode="bottom",
+        bottom_angle_jitter=0.2,
+    )
+    env.reset(seed=4)
+    angle = float(env.data.qpos[env._hinge_qpos_idx])
+
+    assert abs(angle - np.pi) <= 0.2 + 1e-6
+
+    env.close()
+
+
+def test_bottom_biased_reset_prefers_bottom_but_not_exclusive() -> None:
+    env = CartPoleBalanceEnv(
+        render_mode=None,
+        reset_mode="bottom_biased",
+        bottom_bias_prob=0.8,
+        bottom_angle_jitter=0.2,
+    )
+
+    near_bottom = 0
+    total = 200
+    for i in range(total):
+        env.reset(seed=i)
+        angle = float(env.data.qpos[env._hinge_qpos_idx])
+        if abs(angle - np.pi) <= 0.2 + 1e-6:
+            near_bottom += 1
+
+    assert near_bottom > 100
+    assert near_bottom < total
 
     env.close()
