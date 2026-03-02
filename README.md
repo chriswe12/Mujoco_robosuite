@@ -2,7 +2,7 @@
 
 Minimal Python setup for `mujoco` and `robosuite`, including:
 - A MuJoCo double-pendulum demo
-- A 2D CartPole training + deployment pipeline (PPO)
+- A 2D CartPole swing-up + balance training and deployment pipeline (PPO)
 
 ## Project structure
 
@@ -73,6 +73,23 @@ Deploy only (requires saved artifacts):
 ```bash
 python scripts/train_deploy_cartpole.py --mode deploy
 ```
+
+Useful swing-up options:
+
+```bash
+python scripts/train_deploy_cartpole.py \
+  --mode train \
+  --timesteps 200000 \
+  --x-limit 4.8 \
+  --reset-mode bottom_biased \
+  --bottom-bias-prob 0.8 \
+  --bottom-angle-jitter 0.25
+```
+
+Environment behavior for CartPole:
+- Pole hinge supports continuous 360 degrees (no hinge joint limit).
+- Episode endings are time-limit based by default (`--max-episode-steps`).
+- Observation order is `[cart_pos, cart_vel, sin_theta, cos_theta, pole_ang_vel]`.
 
 Default artifacts:
 - Policy: `artifacts/cartpole_ppo.zip`

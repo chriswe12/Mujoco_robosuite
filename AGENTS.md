@@ -29,5 +29,5 @@ This file applies to the entire repository tree unless a deeper directory provid
 
 ## CartPole notes
 - `models/cartpole.xml` uses non-colliding decorative geoms (`contype=0`, `conaffinity=0`) to avoid contact constraints blocking cart motion
-- Observation order in `CartPoleBalanceEnv`: `[cart_pos, cart_vel, pole_angle, pole_ang_vel]`
+- Observation order in `CartPoleBalanceEnv`: `[cart_pos, cart_vel, sin_theta, cos_theta, pole_ang_vel]`
 - Joint indexing must use MuJoCo address arrays (`jnt_qposadr`, `jnt_dofadr`), not raw joint IDs
