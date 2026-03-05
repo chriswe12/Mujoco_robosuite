@@ -95,6 +95,33 @@ Default artifacts:
 - Policy: `artifacts/cartpole_ppo.zip`
 - Normalization stats: `artifacts/cartpole_vecnormalize.pkl`
 
+## Train Humanoid
+
+Train only:
+
+```bash
+source .venv/bin/activate
+python scripts/train_deploy_humanoid.py --mode train --timesteps 1000000
+```
+
+Useful throughput options for remote machines:
+
+```bash
+python scripts/train_deploy_humanoid.py \
+  --mode train \
+  --timesteps 1000000 \
+  --device auto \
+  --n-envs 8 \
+  --n-steps 1024 \
+  --batch-size 1024 \
+  --net-arch 256 256
+```
+
+Notes:
+- Humanoid training is a mixed CPU/GPU workload: MuJoCo stepping is CPU-bound, policy/value updates run in PyTorch.
+- `--mode deploy` uses `render_mode="human"`, so remote headless servers should usually run `--mode train` only.
+- `requirements.txt` is intentionally base-only. For GPU training, install a CUDA-enabled PyTorch build that matches the host machine, then verify with `python -c "import torch; print(torch.cuda.is_available())"`.
+
 ## Run tests
 
 ```bash
